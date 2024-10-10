@@ -26,11 +26,14 @@ func iconPath(date time.Time, mode string) string {
 	return fmt.Sprintf("icon/date_%d_%s.png", day, mode)
 }
 
-func currentMode(date time.Time) string {
+func currentMode(date time.Time, now time.Time) string {
+	if date.Month() != now.Month() {
+		return "white"
+	}
 	if date.Day() == time.Now().Day() {
 		return "color"
 	}
-	return "white"
+	return "black"
 }
 
 func GetDates() []Date {
@@ -44,7 +47,7 @@ func GetDates() []Date {
 		dates = append(dates, Date{
 			Date:      date.Format("2006-01-02"),
 			DayOfWeek: date.Weekday().String(),
-			IconPath:  iconPath(date, currentMode(date)),
+			IconPath:  iconPath(date, currentMode(date, now)),
 		})
 	}
 	return dates
