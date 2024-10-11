@@ -5,6 +5,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/6tail/lunar-go/HolidayUtil"
 	"github.com/6tail/lunar-go/calendar"
 	"github.com/o98k-ok/lazy/v2/alfred"
 )
@@ -16,11 +17,15 @@ type Date struct {
 	Lunar     string
 	Jieqi     string
 	Festivals string
+	Holiday   string
 }
 
 func (d Date) ToAlfredElem() *alfred.Item {
 	return &alfred.Item{
 		Title: func() string {
+			if d.Holiday != "" {
+				return d.Holiday
+			}
 			if d.Festivals != "" {
 				return fmt.Sprintf("%s %s", d.DayOfWeek, d.Festivals)
 			}
@@ -32,6 +37,10 @@ func (d Date) ToAlfredElem() *alfred.Item {
 		SubTitle: func() string {
 			builder := strings.Builder{}
 			builder.WriteString(fmt.Sprintf("%s %s", d.Date, d.Lunar))
+			if d.Holiday != "" {
+				builder.WriteString(" ")
+				builder.WriteString(d.Holiday)
+			}
 			if d.Festivals != "" {
 				builder.WriteString(" ")
 				builder.WriteString(d.Festivals)
@@ -104,6 +113,22 @@ func JieQi(date time.Time) string {
 	return cal.GetJieQi()
 }
 
+func Holiday(date time.Time) string {
+	holiday := HolidayUtil.GetHoliday(date.Format("2006-01-02"))
+	if holiday == nil {
+		return ""
+	}
+
+	var result strings.Builder
+	result.WriteString(holiday.GetName())
+	if holiday.IsWork() {
+		result.WriteString("-班")
+	} else {
+		result.WriteString("-休")
+	}
+	return result.String()
+}
+
 func GetDates() []Date {
 	now := time.Now()
 	dow := now.Weekday()
@@ -119,6 +144,7 @@ func GetDates() []Date {
 			Lunar:     Lunar(date),
 			Festivals: Festivals(date),
 			Jieqi:     JieQi(date),
+			Holiday:   Holiday(date),
 		})
 	}
 	return dates
