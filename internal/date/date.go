@@ -10,6 +10,15 @@ import (
 	"github.com/o98k-ok/lazy/v2/alfred"
 )
 
+const (
+	DateTitle     = "日期"
+	LunarTitle    = "农历"
+	HolidayTitle  = "假期"
+	FestivalTitle = "节日"
+	JieqiTitle    = "节气"
+	WeekTitle     = "星期"
+)
+
 type Date struct {
 	Date      string
 	DayOfWeek string
@@ -18,6 +27,23 @@ type Date struct {
 	Jieqi     string
 	Festivals string
 	Holiday   string
+}
+
+func (d Date) DetailFilter() *alfred.Items {
+	items := alfred.NewItems()
+	items.Append(alfred.NewItem(d.Date, DateTitle, d.Date))
+	items.Append(alfred.NewItem(d.Lunar, LunarTitle, d.Lunar))
+	items.Append(alfred.NewItem(d.DayOfWeek, WeekTitle, d.DayOfWeek))
+	if d.Holiday != "" {
+		items.Append(alfred.NewItem(d.Holiday, HolidayTitle, d.Holiday))
+	}
+	if d.Festivals != "" {
+		items.Append(alfred.NewItem(d.Festivals, FestivalTitle, d.Festivals))
+	}
+	if d.Jieqi != "" {
+		items.Append(alfred.NewItem(d.Jieqi, JieqiTitle, d.Jieqi))
+	}
+	return items
 }
 
 func (d Date) ToAlfredElem() *alfred.Item {
@@ -36,21 +62,19 @@ func (d Date) ToAlfredElem() *alfred.Item {
 		}(),
 		SubTitle: func() string {
 			builder := strings.Builder{}
-			builder.WriteString(fmt.Sprintf("%s %s", d.Date, d.Lunar))
+			builder.WriteString(fmt.Sprintf("%s:%s %s:%s", DateTitle, d.Date, LunarTitle, d.Lunar))
 			if d.Holiday != "" {
-				builder.WriteString(" ")
-				builder.WriteString(d.Holiday)
+				builder.WriteString(fmt.Sprintf(" %s:%s", HolidayTitle, d.Holiday))
 			}
 			if d.Festivals != "" {
-				builder.WriteString(" ")
-				builder.WriteString(d.Festivals)
+				builder.WriteString(fmt.Sprintf(" %s:%s", FestivalTitle, d.Festivals))
 			}
 			if d.Jieqi != "" {
-				builder.WriteString(" ")
-				builder.WriteString(d.Jieqi)
+				builder.WriteString(fmt.Sprintf(" %s:%s", JieqiTitle, d.Jieqi))
 			}
 			return builder.String()
 		}(),
+		Arg:  d.Date,
 		Icon: &alfred.Icon{Path: d.IconPath},
 	}
 }
@@ -148,4 +172,16 @@ func GetDates() []Date {
 		})
 	}
 	return dates
+}
+
+func Detail(date string) Date {
+	ts, _ := time.Parse("2006-01-02", date)
+	return Date{
+		Date:      date,
+		DayOfWeek: ChineseDayOfWeek(ts),
+		Lunar:     Lunar(ts),
+		Festivals: Festivals(ts),
+		Jieqi:     JieQi(ts),
+		Holiday:   Holiday(ts),
+	}
 }
