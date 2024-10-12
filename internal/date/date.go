@@ -29,53 +29,139 @@ type Date struct {
 	Holiday   string
 }
 
+func dateKey(mode string) string {
+	return fmt.Sprintf("./icon/date_%s.png", mode)
+}
+
+func lunarKey(mode string) string {
+	return fmt.Sprintf("./icon/calendarfull_%s.png", mode)
+}
+
+func weekKey(weekday string, mode string) string {
+	switch weekday {
+	case "周一":
+		return fmt.Sprintf("./icon/monday_%s.png", mode)
+	case "周二":
+		return fmt.Sprintf("./icon/tuesday_%s.png", mode)
+	case "周三":
+		return fmt.Sprintf("./icon/wednesday_%s.png", mode)
+	case "周四":
+		return fmt.Sprintf("./icon/thursday_%s.png", mode)
+	case "周五":
+		return fmt.Sprintf("./icon/friday_%s.png", mode)
+	case "周六":
+		return fmt.Sprintf("./icon/saturday_%s.png", mode)
+	case "周日":
+		return fmt.Sprintf("./icon/sunday_%s.png", mode)
+	}
+	return ""
+}
+
+func holidayKey(holiday string, mode string) string {
+	if strings.Contains(holiday, "班") {
+		return fmt.Sprintf("./icon/overtime_%s.png", mode)
+	}
+	return fmt.Sprintf("./icon/holiday_%s.png", mode)
+}
+
+func festivalKey(mode string) string {
+	return fmt.Sprintf("./icon/temple_%s.png", mode)
+}
+
+func jieqiKey(mode string) string {
+	return fmt.Sprintf("./icon/blossom_%s.png", mode)
+}
+
 func (d Date) DetailFilter() *alfred.Items {
 	items := alfred.NewItems()
-	items.Append(alfred.NewItem(d.Date, DateTitle, d.Date))
-	items.Append(alfred.NewItem(d.Lunar, LunarTitle, d.Lunar))
-	items.Append(alfred.NewItem(d.DayOfWeek, WeekTitle, d.DayOfWeek))
+	items.Append(&alfred.Item{
+		Title:    d.Date,
+		SubTitle: DateTitle,
+		Arg:      d.Date,
+		Icon:     &alfred.Icon{Path: dateKey(MODE)},
+	})
+	items.Append(&alfred.Item{
+		Title:    d.Lunar,
+		SubTitle: LunarTitle,
+		Arg:      d.Lunar,
+		Icon:     &alfred.Icon{Path: lunarKey(MODE)},
+	})
+	items.Append(&alfred.Item{
+		Title:    d.DayOfWeek,
+		SubTitle: WeekTitle,
+		Arg:      d.DayOfWeek,
+		Icon:     &alfred.Icon{Path: weekKey(d.DayOfWeek, MODE)},
+	})
 	if d.Holiday != "" {
-		items.Append(alfred.NewItem(d.Holiday, HolidayTitle, d.Holiday))
+		items.Append(&alfred.Item{
+			Title:    d.Holiday,
+			SubTitle: HolidayTitle,
+			Arg:      d.Holiday,
+			Icon:     &alfred.Icon{Path: holidayKey(d.Holiday, MODE)},
+		})
 	}
 	if d.Festivals != "" {
-		items.Append(alfred.NewItem(d.Festivals, FestivalTitle, d.Festivals))
+		items.Append(&alfred.Item{
+			Title:    d.Festivals,
+			SubTitle: FestivalTitle,
+			Arg:      d.Festivals,
+			Icon:     &alfred.Icon{Path: festivalKey(MODE)},
+		})
 	}
 	if d.Jieqi != "" {
-		items.Append(alfred.NewItem(d.Jieqi, JieqiTitle, d.Jieqi))
+		items.Append(&alfred.Item{
+			Title:    d.Jieqi,
+			SubTitle: JieqiTitle,
+			Arg:      d.Jieqi,
+			Icon:     &alfred.Icon{Path: jieqiKey(MODE)},
+		})
 	}
 	return items
 }
 
-func (d Date) ToAlfredElem() *alfred.Item {
-	return &alfred.Item{
-		Title: func() string {
-			if d.Holiday != "" {
-				return d.Holiday
-			}
-			if d.Festivals != "" {
-				return fmt.Sprintf("%s %s", d.DayOfWeek, d.Festivals)
-			}
-			if d.Jieqi != "" {
-				return fmt.Sprintf("%s %s", d.DayOfWeek, d.Jieqi)
-			}
-			return d.DayOfWeek
-		}(),
-		SubTitle: func() string {
-			builder := strings.Builder{}
-			builder.WriteString(fmt.Sprintf("%s:%s %s:%s", DateTitle, d.Date, LunarTitle, d.Lunar))
-			if d.Holiday != "" {
-				builder.WriteString(fmt.Sprintf(" %s:%s", HolidayTitle, d.Holiday))
-			}
-			if d.Festivals != "" {
-				builder.WriteString(fmt.Sprintf(" %s:%s", FestivalTitle, d.Festivals))
-			}
-			if d.Jieqi != "" {
-				builder.WriteString(fmt.Sprintf(" %s:%s", JieqiTitle, d.Jieqi))
-			}
-			return builder.String()
-		}(),
-		Arg:  d.Date,
-		Icon: &alfred.Icon{Path: d.IconPath},
+type Items struct {
+	Items     []*Item `json:"items"`
+	Preselect string  `json:"preselect"`
+}
+
+type Item struct {
+	alfred.Item
+	Uid string `json:"uid"`
+}
+
+func (d Date) ToAlfredElem() *Item {
+	return &Item{
+		Item: alfred.Item{
+			Title: func() string {
+				if d.Holiday != "" {
+					return d.Holiday
+				}
+				if d.Festivals != "" {
+					return fmt.Sprintf("%s %s", d.DayOfWeek, d.Festivals)
+				}
+				if d.Jieqi != "" {
+					return fmt.Sprintf("%s %s", d.DayOfWeek, d.Jieqi)
+				}
+				return d.DayOfWeek
+			}(),
+			SubTitle: func() string {
+				builder := strings.Builder{}
+				builder.WriteString(fmt.Sprintf("%s:%s %s:%s", DateTitle, d.Date, LunarTitle, d.Lunar))
+				if d.Holiday != "" {
+					builder.WriteString(fmt.Sprintf(" %s:%s", HolidayTitle, d.Holiday))
+				}
+				if d.Festivals != "" {
+					builder.WriteString(fmt.Sprintf(" %s:%s", FestivalTitle, d.Festivals))
+				}
+				if d.Jieqi != "" {
+					builder.WriteString(fmt.Sprintf(" %s:%s", JieqiTitle, d.Jieqi))
+				}
+				return builder.String()
+			}(),
+			Arg:  d.Date,
+			Icon: &alfred.Icon{Path: d.IconPath},
+		},
+		Uid: d.Date,
 	}
 }
 
@@ -84,14 +170,21 @@ func iconPath(date time.Time, mode string) string {
 	return fmt.Sprintf("icon/date_%d_%s.png", day, mode)
 }
 
-func currentMode(date time.Time, now time.Time) string {
+func currentMode(date time.Time, now time.Time, mode string) string {
+	var rmode string
+	if mode == "black" {
+		rmode = "white"
+	} else {
+		rmode = "black"
+	}
+
 	if date.Month() != now.Month() {
-		return "white"
+		return rmode
 	}
 	if date.Day() == time.Now().Day() {
 		return "color"
 	}
-	return "black"
+	return mode
 }
 
 func ChineseDayOfWeek(date time.Time) string {
@@ -164,7 +257,7 @@ func GetDates() []Date {
 		dates = append(dates, Date{
 			Date:      date.Format("2006-01-02"),
 			DayOfWeek: ChineseDayOfWeek(date),
-			IconPath:  iconPath(date, currentMode(date, now)),
+			IconPath:  iconPath(date, currentMode(date, now, MODE)),
 			Lunar:     Lunar(date),
 			Festivals: Festivals(date),
 			Jieqi:     JieQi(date),
