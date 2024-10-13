@@ -2,6 +2,7 @@ package date
 
 import (
 	"fmt"
+	"os"
 	"strings"
 	"time"
 
@@ -231,6 +232,10 @@ func (d Date) ToAlfredElem() *Item {
 				}
 				if d.Jieqi != "" {
 					builder.WriteString(fmt.Sprintf(" %s:%s", JieqiTitle, d.Jieqi))
+				}
+
+				if _, err := os.Stat(d.Date); err == nil {
+					builder.WriteString(" 想法✅")
 				}
 				return builder.String()
 			}(),
