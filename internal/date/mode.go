@@ -1,5 +1,6 @@
 package date
 
 var (
-	MODE = "white"
+	MODE          = "white"
+	NOTE_DATE_KEY = "note_date"
 )

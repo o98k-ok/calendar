@@ -29,6 +29,18 @@ type Date struct {
 	Holiday   string
 }
 
+func noteKey(mode string) string {
+	return fmt.Sprintf("./icon/note_%s.png", mode)
+}
+
+func catKey(mode string) string {
+	return fmt.Sprintf("./icon/cat_%s.png", mode)
+}
+
+func tidyKey(mode string) string {
+	return fmt.Sprintf("./icon/tidy_%s.png", mode)
+}
+
 func dateKey(mode string) string {
 	return fmt.Sprintf("./icon/date_%s.png", mode)
 }
@@ -72,61 +84,125 @@ func jieqiKey(mode string) string {
 	return fmt.Sprintf("./icon/blossom_%s.png", mode)
 }
 
-func (d Date) DetailFilter() *alfred.Items {
-	items := alfred.NewItems()
-	items.Append(&alfred.Item{
-		Title:    d.Date,
-		SubTitle: DateTitle,
-		Arg:      d.Date,
-		Icon:     &alfred.Icon{Path: dateKey(MODE)},
+func (d Date) DetailFilter() *Items {
+	items := &Items{}
+	items.Items = append(items.Items, &Item{
+		Item: alfred.Item{
+			Title:    "回顾",
+			SubTitle: "📖",
+			Arg:      "cat",
+			Icon:     &alfred.Icon{Path: catKey(MODE)},
+		},
+		Variables: map[string]string{
+			NOTE_DATE_KEY: d.Date,
+		},
 	})
-	items.Append(&alfred.Item{
-		Title:    d.Lunar,
-		SubTitle: LunarTitle,
-		Arg:      d.Lunar,
-		Icon:     &alfred.Icon{Path: lunarKey(MODE)},
+	items.Items = append(items.Items, &Item{
+		Item: alfred.Item{
+			Title:    "记录",
+			SubTitle: "📝",
+			Arg:      "note",
+			Icon:     &alfred.Icon{Path: noteKey(MODE)},
+		},
+		Variables: map[string]string{
+			NOTE_DATE_KEY: d.Date,
+		},
 	})
-	items.Append(&alfred.Item{
-		Title:    d.DayOfWeek,
-		SubTitle: WeekTitle,
-		Arg:      d.DayOfWeek,
-		Icon:     &alfred.Icon{Path: weekKey(d.DayOfWeek, MODE)},
+	items.Items = append(items.Items, &Item{
+		Item: alfred.Item{
+			Title:    d.Date,
+			SubTitle: DateTitle,
+			Arg:      d.Date,
+			Icon:     &alfred.Icon{Path: dateKey(MODE)},
+		},
+		Variables: map[string]string{
+			NOTE_DATE_KEY: d.Date,
+		},
+	})
+	items.Items = append(items.Items, &Item{
+		Item: alfred.Item{
+			Title:    d.Lunar,
+			SubTitle: LunarTitle,
+			Arg:      d.Lunar,
+			Icon:     &alfred.Icon{Path: lunarKey(MODE)},
+		},
+		Variables: map[string]string{
+			NOTE_DATE_KEY: d.Date,
+		},
+	})
+	items.Items = append(items.Items, &Item{
+		Item: alfred.Item{
+			Title:    d.DayOfWeek,
+			SubTitle: "😉",
+			Arg:      d.DayOfWeek,
+			Icon:     &alfred.Icon{Path: weekKey(d.DayOfWeek, MODE)},
+		},
+		Variables: map[string]string{
+			NOTE_DATE_KEY: d.Date,
+		},
 	})
 	if d.Holiday != "" {
-		items.Append(&alfred.Item{
-			Title:    d.Holiday,
-			SubTitle: HolidayTitle,
-			Arg:      d.Holiday,
-			Icon:     &alfred.Icon{Path: holidayKey(d.Holiday, MODE)},
+		items.Items = append(items.Items, &Item{
+			Item: alfred.Item{
+				Title:    d.Holiday,
+				SubTitle: HolidayTitle,
+				Arg:      d.Holiday,
+				Icon:     &alfred.Icon{Path: holidayKey(d.Holiday, MODE)},
+			},
+			Variables: map[string]string{
+				NOTE_DATE_KEY: d.Date,
+			},
 		})
 	}
 	if d.Festivals != "" {
-		items.Append(&alfred.Item{
-			Title:    d.Festivals,
-			SubTitle: FestivalTitle,
-			Arg:      d.Festivals,
-			Icon:     &alfred.Icon{Path: festivalKey(MODE)},
+		items.Items = append(items.Items, &Item{
+			Item: alfred.Item{
+				Title:    d.Festivals,
+				SubTitle: FestivalTitle,
+				Arg:      d.Festivals,
+				Icon:     &alfred.Icon{Path: festivalKey(MODE)},
+			},
+			Variables: map[string]string{
+				NOTE_DATE_KEY: d.Date,
+			},
 		})
 	}
 	if d.Jieqi != "" {
-		items.Append(&alfred.Item{
-			Title:    d.Jieqi,
-			SubTitle: JieqiTitle,
-			Arg:      d.Jieqi,
-			Icon:     &alfred.Icon{Path: jieqiKey(MODE)},
+		items.Items = append(items.Items, &Item{
+			Item: alfred.Item{
+				Title:    d.Jieqi,
+				SubTitle: JieqiTitle,
+				Arg:      d.Jieqi,
+				Icon:     &alfred.Icon{Path: jieqiKey(MODE)},
+			},
+			Variables: map[string]string{
+				NOTE_DATE_KEY: d.Date,
+			},
 		})
 	}
+	items.Items = append(items.Items, &Item{
+		Item: alfred.Item{
+			Title:    "整理",
+			SubTitle: "📑",
+			Arg:      "tidy",
+			Icon:     &alfred.Icon{Path: tidyKey(MODE)},
+		},
+		Variables: map[string]string{
+			NOTE_DATE_KEY: d.Date,
+		},
+	})
 	return items
 }
 
 type Items struct {
 	Items     []*Item `json:"items"`
-	Preselect string  `json:"preselect"`
+	Preselect string  `json:"preselect,omitempty"`
 }
 
 type Item struct {
 	alfred.Item
-	Uid string `json:"uid"`
+	Uid       string            `json:"uid,omitempty"`
+	Variables map[string]string `json:"variables,omitempty"`
 }
 
 func (d Date) ToAlfredElem() *Item {
