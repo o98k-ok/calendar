@@ -4,7 +4,7 @@ go 1.21.6
 
 require (
 	github.com/6tail/lunar-go v1.3.13
-	github.com/o98k-ok/lazy v0.2.51
+	github.com/o98k-ok/lazy v0.2.52
 )
 
 require (

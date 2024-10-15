@@ -85,164 +85,62 @@ func jieqiKey(mode string) string {
 	return fmt.Sprintf("./icon/blossom_%s.png", mode)
 }
 
-func (d Date) DetailFilter() *Items {
-	items := &Items{}
-	items.Items = append(items.Items, &Item{
-		Item: alfred.Item{
-			Title:    "回顾",
-			SubTitle: "📖",
-			Arg:      "cat",
-			Icon:     &alfred.Icon{Path: catKey(MODE)},
-		},
-		Variables: map[string]string{
-			NOTE_DATE_KEY: d.Date,
-		},
-	})
-	items.Items = append(items.Items, &Item{
-		Item: alfred.Item{
-			Title:    "记录",
-			SubTitle: "📝",
-			Arg:      "note",
-			Icon:     &alfred.Icon{Path: noteKey(MODE)},
-		},
-		Variables: map[string]string{
-			NOTE_DATE_KEY: d.Date,
-		},
-	})
-	items.Items = append(items.Items, &Item{
-		Item: alfred.Item{
-			Title:    d.Date,
-			SubTitle: DateTitle,
-			Arg:      d.Date,
-			Icon:     &alfred.Icon{Path: dateKey(MODE)},
-		},
-		Variables: map[string]string{
-			NOTE_DATE_KEY: d.Date,
-		},
-	})
-	items.Items = append(items.Items, &Item{
-		Item: alfred.Item{
-			Title:    d.Lunar,
-			SubTitle: LunarTitle,
-			Arg:      d.Lunar,
-			Icon:     &alfred.Icon{Path: lunarKey(MODE)},
-		},
-		Variables: map[string]string{
-			NOTE_DATE_KEY: d.Date,
-		},
-	})
-	items.Items = append(items.Items, &Item{
-		Item: alfred.Item{
-			Title:    d.DayOfWeek,
-			SubTitle: "😉",
-			Arg:      d.DayOfWeek,
-			Icon:     &alfred.Icon{Path: weekKey(d.DayOfWeek, MODE)},
-		},
-		Variables: map[string]string{
-			NOTE_DATE_KEY: d.Date,
-		},
-	})
+func (d Date) DetailFilter() *alfred.Items {
+	items := &alfred.Items{}
+	items.Append(alfred.NewItem("回顾", "📖", "cat").WithIcon(catKey(MODE)).WithVariable(NOTE_DATE_KEY, d.Date))
+	items.Append(alfred.NewItem("记录", "📝", "note").WithIcon(noteKey(MODE)).WithVariable(NOTE_DATE_KEY, d.Date))
+	items.Append(alfred.NewItem("整理", "📑", "tidy").WithIcon(tidyKey(MODE)).WithVariable(NOTE_DATE_KEY, d.Date))
+	items.Append(alfred.NewItem(d.Date, DateTitle, d.Date).WithIcon(dateKey(MODE)).WithVariable(NOTE_DATE_KEY, d.Date))
+	items.Append(alfred.NewItem(d.Lunar, LunarTitle, d.Lunar).WithIcon(lunarKey(MODE)).WithVariable(NOTE_DATE_KEY, d.Date))
+	items.Append(alfred.NewItem(d.DayOfWeek, WeekTitle, d.DayOfWeek).WithIcon(weekKey(d.DayOfWeek, MODE)).WithVariable(NOTE_DATE_KEY, d.Date))
 	if d.Holiday != "" {
-		items.Items = append(items.Items, &Item{
-			Item: alfred.Item{
-				Title:    d.Holiday,
-				SubTitle: HolidayTitle,
-				Arg:      d.Holiday,
-				Icon:     &alfred.Icon{Path: holidayKey(d.Holiday, MODE)},
-			},
-			Variables: map[string]string{
-				NOTE_DATE_KEY: d.Date,
-			},
-		})
+		items.Append(alfred.NewItem(d.Holiday, HolidayTitle, d.Holiday).WithIcon(holidayKey(d.Holiday, MODE)).WithVariable(NOTE_DATE_KEY, d.Date))
 	}
 	if d.Festivals != "" {
-		items.Items = append(items.Items, &Item{
-			Item: alfred.Item{
-				Title:    d.Festivals,
-				SubTitle: FestivalTitle,
-				Arg:      d.Festivals,
-				Icon:     &alfred.Icon{Path: festivalKey(MODE)},
-			},
-			Variables: map[string]string{
-				NOTE_DATE_KEY: d.Date,
-			},
-		})
+		items.Append(alfred.NewItem(d.Festivals, FestivalTitle, d.Festivals).WithIcon(festivalKey(MODE)).WithVariable(NOTE_DATE_KEY, d.Date))
 	}
 	if d.Jieqi != "" {
-		items.Items = append(items.Items, &Item{
-			Item: alfred.Item{
-				Title:    d.Jieqi,
-				SubTitle: JieqiTitle,
-				Arg:      d.Jieqi,
-				Icon:     &alfred.Icon{Path: jieqiKey(MODE)},
-			},
-			Variables: map[string]string{
-				NOTE_DATE_KEY: d.Date,
-			},
-		})
+		items.Append(alfred.NewItem(d.Jieqi, JieqiTitle, d.Jieqi).WithIcon(jieqiKey(MODE)).WithVariable(NOTE_DATE_KEY, d.Date))
 	}
-	items.Items = append(items.Items, &Item{
-		Item: alfred.Item{
-			Title:    "整理",
-			SubTitle: "📑",
-			Arg:      "tidy",
-			Icon:     &alfred.Icon{Path: tidyKey(MODE)},
-		},
-		Variables: map[string]string{
-			NOTE_DATE_KEY: d.Date,
-		},
-	})
+	items.Append(alfred.NewItem("整理", "📑", "tidy").WithIcon(tidyKey(MODE)).WithVariable(NOTE_DATE_KEY, d.Date))
 	return items
 }
 
-type Items struct {
-	Items     []*Item `json:"items"`
-	Preselect string  `json:"preselect,omitempty"`
-}
+func (d Date) ToAlfredElem() *alfred.Item {
+	return &alfred.Item{
+		Title: func() string {
+			if d.Holiday != "" {
+				return d.Holiday
+			}
+			if d.Festivals != "" {
+				return fmt.Sprintf("%s %s", d.DayOfWeek, d.Festivals)
+			}
+			if d.Jieqi != "" {
+				return fmt.Sprintf("%s %s", d.DayOfWeek, d.Jieqi)
+			}
+			return d.DayOfWeek
+		}(),
+		SubTitle: func() string {
+			builder := strings.Builder{}
+			builder.WriteString(fmt.Sprintf("%s:%s %s:%s", DateTitle, d.Date, LunarTitle, d.Lunar))
+			if d.Holiday != "" {
+				builder.WriteString(fmt.Sprintf(" %s:%s", HolidayTitle, d.Holiday))
+			}
+			if d.Festivals != "" {
+				builder.WriteString(fmt.Sprintf(" %s:%s", FestivalTitle, d.Festivals))
+			}
+			if d.Jieqi != "" {
+				builder.WriteString(fmt.Sprintf(" %s:%s", JieqiTitle, d.Jieqi))
+			}
 
-type Item struct {
-	alfred.Item
-	Uid       string            `json:"uid,omitempty"`
-	Variables map[string]string `json:"variables,omitempty"`
-}
-
-func (d Date) ToAlfredElem() *Item {
-	return &Item{
-		Item: alfred.Item{
-			Title: func() string {
-				if d.Holiday != "" {
-					return d.Holiday
-				}
-				if d.Festivals != "" {
-					return fmt.Sprintf("%s %s", d.DayOfWeek, d.Festivals)
-				}
-				if d.Jieqi != "" {
-					return fmt.Sprintf("%s %s", d.DayOfWeek, d.Jieqi)
-				}
-				return d.DayOfWeek
-			}(),
-			SubTitle: func() string {
-				builder := strings.Builder{}
-				builder.WriteString(fmt.Sprintf("%s:%s %s:%s", DateTitle, d.Date, LunarTitle, d.Lunar))
-				if d.Holiday != "" {
-					builder.WriteString(fmt.Sprintf(" %s:%s", HolidayTitle, d.Holiday))
-				}
-				if d.Festivals != "" {
-					builder.WriteString(fmt.Sprintf(" %s:%s", FestivalTitle, d.Festivals))
-				}
-				if d.Jieqi != "" {
-					builder.WriteString(fmt.Sprintf(" %s:%s", JieqiTitle, d.Jieqi))
-				}
-
-				if _, err := os.Stat(d.Date); err == nil {
-					builder.WriteString(" 想法✅")
-				}
-				return builder.String()
-			}(),
-			Arg:  d.Date,
-			Icon: &alfred.Icon{Path: d.IconPath},
-		},
-		Uid: d.Date,
+			if _, err := os.Stat(d.Date); err == nil {
+				builder.WriteString(" 想法✅")
+			}
+			return builder.String()
+		}(),
+		Arg:  d.Date,
+		Icon: &alfred.Icon{Path: d.IconPath},
+		Uid:  d.Date,
 	}
 }
 

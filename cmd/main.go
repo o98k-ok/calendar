@@ -21,14 +21,11 @@ func main() {
 
 	app.Bind("all", func(s []string) {
 		dates := date.GetDates()
-		items := &date.Items{
-			Preselect: time.Now().Format("2006-01-02"),
-		}
+		items := alfred.NewItems().WithPreselect(time.Now().Format("2006-01-02"))
 		for _, date := range dates {
-			items.Items = append(items.Items, date.ToAlfredElem())
+			items.Append(date.ToAlfredElem())
 		}
-		data, _ := json.Marshal(items)
-		fmt.Println(string(data))
+		items.Show()
 	})
 
 	app.Bind("detail", func(s []string) {
