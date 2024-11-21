@@ -3,7 +3,7 @@ module github.com/o98k-ok/calendar
 go 1.21.6
 
 require (
-	github.com/6tail/lunar-go v1.3.13
+	github.com/6tail/lunar-go v1.3.15
 	github.com/o98k-ok/lazy v0.2.52
 )
 
