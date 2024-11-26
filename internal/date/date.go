@@ -3,6 +3,7 @@ package date
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -133,7 +134,7 @@ func (d Date) ToAlfredElem() *alfred.Item {
 				builder.WriteString(fmt.Sprintf(" %s:%s", JieqiTitle, d.Jieqi))
 			}
 
-			if _, err := os.Stat(d.Date); err == nil {
+			if _, err := os.Stat(filepath.Join(NotePath, d.Date+".md")); err == nil {
 				builder.WriteString(" 想法✅")
 			}
 			return builder.String()

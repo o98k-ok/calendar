@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -17,6 +18,11 @@ func main() {
 	// 设置主题 && 字体颜色
 	if os.Getenv("THEME") == "white" {
 		date.MODE = "black"
+	}
+
+	date.NotePath = "./"
+	if os.Getenv("NOTE_PATH") != "" {
+		date.NotePath = os.Getenv("NOTE_PATH")
 	}
 
 	app.Bind("all", func(s []string) {
@@ -40,6 +46,7 @@ func main() {
 			alfred.Log("filename is empty")
 			return
 		}
+		filename = filepath.Join(date.NotePath, filename) + ".md"
 
 		newContent := strings.TrimSpace(s[0])
 		if len(newContent) != 0 && newContent != "note" {
@@ -49,7 +56,7 @@ func main() {
 				return
 			}
 			defer file.Close()
-			if _, err := file.WriteString("* " + newContent + "\n"); err != nil {
+			if _, err := file.WriteString("\n* " + time.Now().Format("15:04") + " " + newContent); err != nil {
 				alfred.Log("write file error: %v", err)
 				return
 			}
@@ -58,7 +65,7 @@ func main() {
 		content, _ := os.ReadFile(filename)
 		result := map[string]any{
 			"variables": map[string]string{
-				date.NOTE_DATE_KEY: filename,
+				date.NOTE_DATE_KEY: os.Getenv(date.NOTE_DATE_KEY),
 			},
 			"response": string(content),
 			"behaviour": map[string]string{
@@ -75,12 +82,13 @@ func main() {
 			alfred.Log("filename is empty")
 			return
 		}
+		filename = filepath.Join(date.NotePath, filename) + ".md"
 
 		content, _ := os.ReadFile(filename)
 		result := map[string]any{
 			"response": string(content),
 			"variables": map[string]string{
-				"note_date": filename,
+				"note_date": os.Getenv(date.NOTE_DATE_KEY),
 			},
 		}
 		data, _ := json.Marshal(result)
